@@ -13,7 +13,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
-
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/api/grades')]
 class GradeController extends AbstractController
@@ -34,12 +34,14 @@ class GradeController extends AbstractController
     }
 
     #[Route('', name: 'api_grade_index', methods: ['GET'])]
+    #[IsGranted(User::ROLE_CLIENT)]
     public function index(): JsonResponse
     {
         return $this->json($this->gradeRepository->findAll(), Response::HTTP_OK, [], ['groups' => 'grade:read']);
     }
 
     #[Route('', name: 'api_grade_store', methods: ['POST'])]
+    #[IsGranted(User::ROLE_MANAGER)]
     public function store(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
@@ -85,12 +87,14 @@ class GradeController extends AbstractController
     }
     
     #[Route('/{id<\d+>}', name: 'api_grade_show', methods: ['GET'])]
+    #[IsGranted(User::ROLE_MANAGER)]
     public function show(Grade $grade): JsonResponse
     {
         return $this->json($grade, Response::HTTP_OK, [], ['groups' => 'grade:read']);
     }
 
     #[Route('/{id<\d+>}', name: 'api_grade_update', methods: ['PUT', 'PATCH'])]
+    #[IsGranted(User::ROLE_MANAGER)]
     public function update(Request $request, Grade $grade): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
@@ -112,6 +116,7 @@ class GradeController extends AbstractController
     }
 
     #[Route('/{id<\d+>}', name: 'api_grade_delete', methods: ['DELETE'])]
+    #[IsGranted(User::ROLE_MANAGER)]
     public function delete(Grade $grade): JsonResponse
     {
         $this->em->remove($grade);

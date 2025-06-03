@@ -8,7 +8,7 @@ class LessonController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Lesson::query()->with(['subject', 'teacher']); // Eager load relations
+        $query = Lesson::query()->with(['subject', 'teacher']); 
         $filterableFields = ['id', 'topic', 'homework', 'subject_id', 'teacher_id'];
 
         foreach ($request->query() as $key => $value) {
@@ -16,13 +16,12 @@ class LessonController extends Controller
                 if (in_array($key, ['topic', 'homework'])) {
                     $query->where($key, 'LIKE', "%{$value}%");
                 } elseif (in_array($key, ['subject_id', 'teacher_id'])) {
-                    $query->where($key, $value); // Фільтрація по ID зв'язаних сутностей
+                    $query->where($key, $value);
                 } else {
                     $query->where($key, $value);
                 }
             }
         }
-        // Фільтрація по lesson_date
         if ($request->has('lesson_date') && !empty($request->lesson_date)) {
             $query->whereDate('lesson_date', $request->lesson_date);
         }
@@ -37,7 +36,6 @@ class LessonController extends Controller
         $lessons = $query->orderBy('lesson_date', 'desc')->paginate($itemsPerPage);
         return response()->json($lessons);
     }
-    // ... store, show, update, destroy ...
     public function store(Request $request) {
         $validator = Validator::make($request->all(), [
             'subject_id' => 'required|exists:subjects,id',

@@ -10,6 +10,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted; 
 
 #[Route('/api/teachers')]
 class TeacherController extends AbstractController
@@ -32,12 +33,14 @@ class TeacherController extends AbstractController
     }
 
     #[Route('', name: 'api_teacher_index', methods: ['GET'])]
+    #[IsGranted(User::ROLE_CLIENT)]
     public function index(): JsonResponse
     {
         return $this->json($this->teacherRepository->findAll());
     }
 
     #[Route('', name: 'api_teacher_store', methods: ['POST'])]
+    #[IsGranted(User::ROLE_CLIENT)]
     public function store(Request $request): JsonResponse
     {
         try {
@@ -58,12 +61,14 @@ class TeacherController extends AbstractController
     }
 
     #[Route('/{id<\d+>}', name: 'api_teacher_show', methods: ['GET'])]
+    #[IsGranted(User::ROLE_CLIENT)]
     public function show(Teacher $teacher): JsonResponse 
     {
         return $this->json($teacher);
     }
 
     #[Route('/{id<\d+>}', name: 'api_teacher_update', methods: ['PUT', 'PATCH'])]
+    #[IsGranted(User::ROLE_CLIENT)]
     public function update(Request $request, Teacher $teacher): JsonResponse
     {
         try {
@@ -82,6 +87,7 @@ class TeacherController extends AbstractController
     }
 
     #[Route('/{id<\d+>}', name: 'api_teacher_delete', methods: ['DELETE'])]
+    #[IsGranted(User::ROLE_CLIENT)]
     public function delete(Teacher $teacher): JsonResponse
     {
         $this->em->remove($teacher);
