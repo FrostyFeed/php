@@ -34,10 +34,40 @@ class GradeController extends AbstractController
     }
 
     #[Route('', name: 'api_grade_index', methods: ['GET'])]
-    #[IsGranted(User::ROLE_CLIENT)]
-    public function index(): JsonResponse
+    #[IsGranted(User::ROLE_CLIENT)] 
+    public function index(Request $request): JsonResponse
     {
-        return $this->json($this->gradeRepository->findAll(), Response::HTTP_OK, [], ['groups' => 'grade:read']);
+        $page = $request->query->getInt('page', 1);
+        $itemsPerPage = $request->query->getInt('itemsPerPage', 10);
+        if ($itemsPerPage <= 0) $itemsPerPage = 10;
+        $itemsPerPage = min($itemsPerPage, 100);
+
+        $filters = $request->query->all();
+        unset($filters['page'], $filters['itemsPerPage'], $filters['sortBy'], $filters['sortOrder']);
+
+        $sortBy = $request->query->get('sortBy', 'id'); 
+        $sortOrder = $request->query->get('sortOrder', 'ASC');
+
+        $paginator = $this->gradeRepository->findByFiltersWithPagination(
+            $filters,
+            $page,
+            $itemsPerPage,
+            $sortBy,
+            $sortOrder
+        );
+
+        $grades = [];
+        foreach ($paginator as $grade) {
+            $grades[] = $grade;
+        }
+
+        return $this->json([
+            'items' => $grades,
+            'totalItems' => count($paginator),
+            'currentPage' => $page,
+            'itemsPerPage' => $itemsPerPage,
+            'totalPages' => ceil(count($paginator) / $itemsPerPage),
+        ], Response::HTTP_OK, [], ['groups' => 'grade:read']);
     }
 
     #[Route('', name: 'api_grade_store', methods: ['POST'])]

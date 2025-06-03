@@ -169,4 +169,69 @@ class Student
         $this->updatedAt = $updatedAt;
         return $this;
     }
+    public function findByFilters(array $filters): array
+    {
+        $qb = $this->createQueryBuilder('s');
+
+        if (!empty($filters['id'])) {
+            $qb->andWhere('s.id = :id')
+               ->setParameter('id', $filters['id']);
+        }
+
+        if (!empty($filters['firstName'])) {
+            $qb->andWhere('s.firstName LIKE :firstName')
+               ->setParameter('firstName', '%' . $filters['firstName'] . '%');
+        }
+
+        if (!empty($filters['lastName'])) {
+            $qb->andWhere('s.lastName LIKE :lastName')
+               ->setParameter('lastName', '%' . $filters['lastName'] . '%');
+        }
+
+        if (!empty($filters['dateOfBirth'])) {
+            $qb->andWhere('s.dateOfBirth = :dateOfBirth')
+               ->setParameter('dateOfBirth', new \DateTime($filters['dateOfBirth']));
+        }
+        if (!empty($filters['dateOfBirth_from'])) {
+            $qb->andWhere('s.dateOfBirth >= :dateOfBirth_from')
+               ->setParameter('dateOfBirth_from', new \DateTime($filters['dateOfBirth_from']));
+        }
+        if (!empty($filters['dateOfBirth_to'])) {
+            $qb->andWhere('s.dateOfBirth <= :dateOfBirth_to')
+               ->setParameter('dateOfBirth_to', new \DateTime($filters['dateOfBirth_to']));
+        }
+         if (isset($filters['dateOfBirth_is_null']) && $filters['dateOfBirth_is_null'] == 'true') {
+            $qb->andWhere('s.dateOfBirth IS NULL');
+        }
+
+
+        if (isset($filters['classGroup'])) {
+             if ($filters['classGroup'] === null || $filters['classGroup'] === 'null') {
+                 $qb->andWhere('s.classGroup IS NULL');
+            } else {
+                $qb->andWhere('s.classGroup LIKE :classGroup')
+                   ->setParameter('classGroup', '%' . $filters['classGroup'] . '%');
+            }
+        }
+
+        if (!empty($filters['createdAt_from'])) {
+            $qb->andWhere('s.createdAt >= :createdAt_from')
+               ->setParameter('createdAt_from', new \DateTimeImmutable($filters['createdAt_from']));
+        }
+        if (!empty($filters['createdAt_to'])) {
+            $qb->andWhere('s.createdAt <= :createdAt_to')
+               ->setParameter('createdAt_to', new \DateTimeImmutable($filters['createdAt_to']));
+        }
+
+        if (!empty($filters['updatedAt_from'])) {
+            $qb->andWhere('s.updatedAt >= :updatedAt_from')
+               ->setParameter('updatedAt_from', new \DateTimeImmutable($filters['updatedAt_from']));
+        }
+        if (!empty($filters['updatedAt_to'])) {
+            $qb->andWhere('s.updatedAt <= :updatedAt_to')
+               ->setParameter('updatedAt_to', new \DateTimeImmutable($filters['updatedAt_to']));
+        }
+
+        return $qb->orderBy('s.id', 'ASC')->getQuery()->getResult();
+    }
 }

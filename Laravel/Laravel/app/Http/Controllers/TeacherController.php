@@ -7,34 +7,25 @@ use Illuminate\Database\Eloquent\Builder;
 
 class TeacherController extends Controller
 {
-    public function index(Request $request)
+     public function index(Request $request): JsonResponse
     {
+        $itemsPerPage = $request->input('itemsPerPage', 10);
+        if (!is_numeric($itemsPerPage) || $itemsPerPage <= 0) {
+            $itemsPerPage = 10;
+        }
+        $itemsPerPage = min($itemsPerPage, 100); 
+
         $query = Teacher::query();
 
-        $filterableFields = ['id', 'first_name', 'last_name', 'email', 'specialization'];
+        $query->applyFilters($request->query());
 
-        foreach ($request->query() as $key => $value) {
-            if (in_array($key, $filterableFields) && !empty($value)) {
-                if (in_array($key, ['first_name', 'last_name', 'email', 'specialization'])) {
-                    $query->where($key, 'LIKE', "%{$value}%");
-                } else {
-                    $query->where($key, $value); // Точне співпадіння для ID
-                }
-            }
-        }
-
-        if ($request->has('created_at_from') && !empty($request->created_at_from)) {
-            $query->whereDate('created_at', '>=', $request->created_at_from);
-        }
-        if ($request->has('created_at_to') && !empty($request->created_at_to)) {
-            $query->whereDate('created_at', '<=', $request->created_at_to);
-        }
-
-        $itemsPerPage = $request->input('itemsPerPage', 10);
-        $teachers = $query->orderBy('id', 'asc')->paginate($itemsPerPage);
+        $teachers = $query->orderBy('id', 'asc') 
+                           ->paginate($itemsPerPage)
+                           ->withQueryString(); 
 
         return response()->json($teachers);
     }
+
 
     public function store(Request $request) {
         $validator = Validator::make($request->all(), [

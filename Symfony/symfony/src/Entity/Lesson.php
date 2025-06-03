@@ -77,6 +77,72 @@ class Lesson
     {
         $this->updatedAt = new \DateTimeImmutable();
     }
+     public function findByFilters(array $filters): array
+    {
+        $qb = $this->createQueryBuilder('l');
+
+        if (!empty($filters['id'])) {
+            $qb->andWhere('l.id = :id')
+               ->setParameter('id', $filters['id']);
+        }
+
+        if (!empty($filters['subject'])) { // Assuming subject ID is passed
+            $qb->andWhere('l.subject = :subject_id')
+               ->setParameter('subject_id', $filters['subject']);
+        }
+
+        if (!empty($filters['teacher'])) { // Assuming teacher ID is passed
+            $qb->andWhere('l.teacher = :teacher_id')
+               ->setParameter('teacher_id', $filters['teacher']);
+        }
+
+        if (!empty($filters['lessonDate'])) {
+            $qb->andWhere('l.lessonDate = :lessonDate')
+               ->setParameter('lessonDate', new \DateTime($filters['lessonDate']));
+        }
+        if (!empty($filters['lessonDate_from'])) {
+            $qb->andWhere('l.lessonDate >= :lessonDate_from')
+               ->setParameter('lessonDate_from', new \DateTime($filters['lessonDate_from']));
+        }
+        if (!empty($filters['lessonDate_to'])) {
+            $qb->andWhere('l.lessonDate <= :lessonDate_to')
+               ->setParameter('lessonDate_to', new \DateTime($filters['lessonDate_to']));
+        }
+
+        if (!empty($filters['topic'])) {
+            $qb->andWhere('l.topic LIKE :topic')
+               ->setParameter('topic', '%' . $filters['topic'] . '%');
+        }
+
+        if (isset($filters['homework'])) {
+            if ($filters['homework'] === null || $filters['homework'] === 'null') {
+                 $qb->andWhere('l.homework IS NULL');
+            } else {
+                 $qb->andWhere('l.homework LIKE :homework')
+                    ->setParameter('homework', '%' . $filters['homework'] . '%');
+            }
+        }
+
+        if (!empty($filters['createdAt_from'])) {
+            $qb->andWhere('l.createdAt >= :createdAt_from')
+               ->setParameter('createdAt_from', new \DateTimeImmutable($filters['createdAt_from']));
+        }
+        if (!empty($filters['createdAt_to'])) {
+            $qb->andWhere('l.createdAt <= :createdAt_to')
+               ->setParameter('createdAt_to', new \DateTimeImmutable($filters['createdAt_to']));
+        }
+
+        if (!empty($filters['updatedAt_from'])) {
+            $qb->andWhere('l.updatedAt >= :updatedAt_from')
+               ->setParameter('updatedAt_from', new \DateTimeImmutable($filters['updatedAt_from']));
+        }
+        if (!empty($filters['updatedAt_to'])) {
+            $qb->andWhere('l.updatedAt <= :updatedAt_to')
+               ->setParameter('updatedAt_to', new \DateTimeImmutable($filters['updatedAt_to']));
+        }
+
+        return $qb->orderBy('l.id', 'ASC')->getQuery()->getResult();
+    }
 
     public function getId(): ?int
     {

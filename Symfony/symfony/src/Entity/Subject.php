@@ -136,4 +136,47 @@ class Subject
         $this->updatedAt = $updatedAt;
         return $this;
     }
+     public function findByFilters(array $filters): array
+    {
+        $qb = $this->createQueryBuilder('sub'); // 's' is already used by Student
+
+        if (!empty($filters['id'])) {
+            $qb->andWhere('sub.id = :id')
+               ->setParameter('id', $filters['id']);
+        }
+
+        if (!empty($filters['name'])) {
+            $qb->andWhere('sub.name LIKE :name')
+               ->setParameter('name', '%' . $filters['name'] . '%');
+        }
+
+        if (isset($filters['description'])) {
+            if ($filters['description'] === null || $filters['description'] === 'null') {
+                 $qb->andWhere('sub.description IS NULL');
+            } else {
+                $qb->andWhere('sub.description LIKE :description')
+                   ->setParameter('description', '%' . $filters['description'] . '%');
+            }
+        }
+
+        if (!empty($filters['createdAt_from'])) {
+            $qb->andWhere('sub.createdAt >= :createdAt_from')
+               ->setParameter('createdAt_from', new \DateTimeImmutable($filters['createdAt_from']));
+        }
+        if (!empty($filters['createdAt_to'])) {
+            $qb->andWhere('sub.createdAt <= :createdAt_to')
+               ->setParameter('createdAt_to', new \DateTimeImmutable($filters['createdAt_to']));
+        }
+
+        if (!empty($filters['updatedAt_from'])) {
+            $qb->andWhere('sub.updatedAt >= :updatedAt_from')
+               ->setParameter('updatedAt_from', new \DateTimeImmutable($filters['updatedAt_from']));
+        }
+        if (!empty($filters['updatedAt_to'])) {
+            $qb->andWhere('sub.updatedAt <= :updatedAt_to')
+               ->setParameter('updatedAt_to', new \DateTimeImmutable($filters['updatedAt_to']));
+        }
+
+        return $qb->orderBy('sub.id', 'ASC')->getQuery()->getResult();
+    }
 }

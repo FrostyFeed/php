@@ -169,4 +169,57 @@ class Teacher
         $this->updatedAt = $updatedAt;
         return $this;
     }
+       public function findByFilters(array $filters): array
+    {
+        $qb = $this->createQueryBuilder('t');
+
+        if (!empty($filters['id'])) {
+            $qb->andWhere('t.id = :id')
+               ->setParameter('id', $filters['id']);
+        }
+
+        if (!empty($filters['firstName'])) {
+            $qb->andWhere('t.firstName LIKE :firstName')
+               ->setParameter('firstName', '%' . $filters['firstName'] . '%');
+        }
+
+        if (!empty($filters['lastName'])) {
+            $qb->andWhere('t.lastName LIKE :lastName')
+               ->setParameter('lastName', '%' . $filters['lastName'] . '%');
+        }
+
+        if (!empty($filters['email'])) {
+            $qb->andWhere('t.email LIKE :email') // Could be exact match: ->andWhere('t.email = :email')
+               ->setParameter('email', '%' . $filters['email'] . '%');
+        }
+
+        if (isset($filters['specialization'])) {
+             if ($filters['specialization'] === null || $filters['specialization'] === 'null') {
+                 $qb->andWhere('t.specialization IS NULL');
+            } else {
+                $qb->andWhere('t.specialization LIKE :specialization')
+                   ->setParameter('specialization', '%' . $filters['specialization'] . '%');
+            }
+        }
+
+        if (!empty($filters['createdAt_from'])) {
+            $qb->andWhere('t.createdAt >= :createdAt_from')
+               ->setParameter('createdAt_from', new \DateTimeImmutable($filters['createdAt_from']));
+        }
+        if (!empty($filters['createdAt_to'])) {
+            $qb->andWhere('t.createdAt <= :createdAt_to')
+               ->setParameter('createdAt_to', new \DateTimeImmutable($filters['createdAt_to']));
+        }
+
+        if (!empty($filters['updatedAt_from'])) {
+            $qb->andWhere('t.updatedAt >= :updatedAt_from')
+               ->setParameter('updatedAt_from', new \DateTimeImmutable($filters['updatedAt_from']));
+        }
+        if (!empty($filters['updatedAt_to'])) {
+            $qb->andWhere('t.updatedAt <= :updatedAt_to')
+               ->setParameter('updatedAt_to', new \DateTimeImmutable($filters['updatedAt_to']));
+        }
+
+        return $qb->orderBy('t.id', 'ASC')->getQuery()->getResult();
+    }
 }

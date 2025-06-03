@@ -33,12 +33,41 @@ class LessonController extends AbstractController
 
 
     #[Route('', name: 'api_lesson_index', methods: ['GET'])]
-    #[IsGranted(User::ROLE_MANAGER)] 
-    public function index(): JsonResponse
+    #[IsGranted(User::ROLE_MANAGER)]
+    public function index(Request $request): JsonResponse
     {
-        return $this->json($this->lessonRepository->findAll(), Response::HTTP_OK, [], ['groups' => 'lesson:read']);
-    }
+        $page = $request->query->getInt('page', 1);
+        $itemsPerPage = $request->query->getInt('itemsPerPage', 10);
+        if ($itemsPerPage <= 0) $itemsPerPage = 10;
+        $itemsPerPage = min($itemsPerPage, 100);
 
+        $filters = $request->query->all();
+        unset($filters['page'], $filters['itemsPerPage'], $filters['sortBy'], $filters['sortOrder']);
+
+        $sortBy = $request->query->get('sortBy', 'lessonDate');
+        $sortOrder = $request->query->get('sortOrder', 'DESC');
+
+        $paginator = $this->lessonRepository->findByFiltersWithPagination(
+            $filters,
+            $page,
+            $itemsPerPage,
+            $sortBy,
+            $sortOrder
+        );
+
+        $lessons = [];
+        foreach ($paginator as $lesson) {
+            $lessons[] = $lesson;
+        }
+
+        return $this->json([
+            'items' => $lessons,
+            'totalItems' => count($paginator),
+            'currentPage' => $page,
+            'itemsPerPage' => $itemsPerPage,
+            'totalPages' => ceil(count($paginator) / $itemsPerPage),
+        ], Response::HTTP_OK, [], ['groups' => 'lesson:read']);
+    }
     #[Route('', name: 'api_lesson_store', methods: ['POST'])]
     #[IsGranted(User::ROLE_MANAGER)] 
     public function store(Request $request): JsonResponse

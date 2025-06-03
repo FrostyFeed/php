@@ -6,34 +6,22 @@ use Illuminate\Support\Facades\Validator;
 
 class GradeController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
-        $query = Grade::query()->with(['student', 'lesson.subject', 'lesson.teacher']);
-        $filterableFields = ['id', 'grade_value', 'comment', 'student_id', 'lesson_id'];
-
-        foreach ($request->query() as $key => $value) {
-            if (in_array($key, $filterableFields) && !empty($value)) {
-                if (in_array($key, ['grade_value', 'comment'])) {
-                    $query->where($key, 'LIKE', "%{$value}%");
-                } elseif (in_array($key, ['student_id', 'lesson_id'])) {
-                    $query->where($key, $value);
-                } else {
-                    $query->where($key, $value);
-                }
-            }
-        }
-        if ($request->has('date_given') && !empty($request->date_given)) {
-            $query->whereDate('date_given', $request->date_given);
-        }
-        if ($request->has('date_given_from') && !empty($request->date_given_from)) {
-            $query->whereDate('date_given', '>=', $request->date_given_from);
-        }
-        if ($request->has('date_given_to') && !empty($request->date_given_to)) {
-            $query->whereDate('date_given', '<=', $request->date_given_to);
-        }
-
         $itemsPerPage = $request->input('itemsPerPage', 10);
-        $grades = $query->orderBy('date_given', 'desc')->paginate($itemsPerPage);
+        if (!is_numeric($itemsPerPage) || $itemsPerPage <= 0) {
+            $itemsPerPage = 10;
+        }
+        $itemsPerPage = min($itemsPerPage, 100); 
+
+        $query = Grade::query()->with(['student', 'lesson.subject', 'lesson.teacher']);
+
+        $query->applyFilters($request->query());
+
+        $grades = $query->orderBy('date_given', 'desc') 
+                         ->paginate($itemsPerPage)
+                         ->withQueryString(); 
+
         return response()->json($grades);
     }
     public function store(Request $request) {
